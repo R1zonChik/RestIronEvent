@@ -1,0 +1,27 @@
+name: RestIronEvent
+version: '1.0'
+main: ru.refontstudio.restironevent.RestIronEvent
+api-version: '1.16'
+softdepend: [PlaceholderAPI]
+commands:
+  golemevent:
+    description: Управление ивентом "Сердце Голема"
+    usage: /golemevent [start|stop|reload]
+    permission: golemevent.admin
+  golemeventspawn:
+    description: Настройка точек спавна для ивента "Сердце Голема"
+    usage: /golemeventspawn [add|remove|golem]
+    permission: golemevent.admin
+permissions:
+  golemevent.admin:
+    description: Доступ к командам управления ивентом
+    default: op
+  golemevent.admin.fly:
+    description: Разрешение на полет в мире ивента
+    default: op
+  golemevent.admin.god:
+    description: Разрешение на режим бога в мире ивента
+    default: op
+  golemevent.admin.gamemode:
+    description: Разрешение на изменение игрового режима в мире ивента
+    default: op

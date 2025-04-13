@@ -1,0 +1,209 @@
+# Настройки ивента "Сердце Голема"
+event:
+  # Мир, в котором будет проходить ивент
+  world: iventgolem
+  # Здоровье голема
+  golem_health: 1000.0
+  # Общая длительность ивента в секундах (10 минут)
+  duration: 600
+  # Длительность каждой волны в секундах
+  wave_durations:
+    - 180  # 3 минуты для первой волны
+    - 180  # 3 минуты для второй волны
+    - 240  # 4 минуты для третьей волны
+  # Фиксированное время в мире (14000 - ночь)
+  world_time: 14000
+  # Интервал респавна мобов в миллисекундах (30 секунд)
+  respawn_interval: 30000
+  # Задержка удаления BossBar после ивента в секундах
+  bossbar_remove_delay: 30
+  # Включить масштабирование количества мобов от онлайна
+  player_scaling: true
+  # Множитель для масштабирования мобов (1.3 моба на каждого игрока)
+  player_multiplier: 1.3
+  # Включить постепенный спавн мобов
+  gradual_spawn: true
+  # Интервал между спавном мобов в секундах
+  spawn_interval: 1.5
+  # Отключить разрушение блоков от взрывов криперов
+  disable_explosions: true
+
+  # Настройки волн мобов
+  waves:
+    # Волна 1 - мало мобов без особых характеристик
+    1:
+      zombie:
+        count: 10
+        health: 20.0
+        damage: 3.0
+        speed: 0.2
+      skeleton:
+        count: 8
+        health: 20.0
+        damage: 2.0
+        speed: 0.2
+
+    # Волна 2 - среднее количество мобов, некоторые быстрее
+    2:
+      zombie:
+        count: 15
+        health: 25.0
+        damage: 4.0
+        speed: 0.3
+      skeleton:
+        count: 12
+        health: 25.0
+        damage: 3.0
+        speed: 0.3
+      spider:
+        count: 8
+        health: 20.0
+        damage: 3.0
+        speed: 0.4
+
+    # Волна 3 - много мобов с разными характеристиками
+    3:
+      zombie:
+        count: 20
+        health: 30.0
+        damage: 5.0
+        speed: 0.35
+      skeleton:
+        count: 15
+        health: 25.0
+        damage: 4.0
+        speed: 0.3
+      spider:
+        count: 12
+        health: 25.0
+        damage: 4.0
+        speed: 0.45
+      creeper:
+        count: 5
+        health: 20.0
+        damage: 0.0
+        speed: 0.3
+      bat:
+        count: 15
+        health: 8.0
+        damage: 2.0
+        speed: 0.6
+      cave_spider:
+        count: 6
+        health: 15.0
+        damage: 3.0
+        speed: 0.4
+
+# Настройки наград
+rewards:
+  # Награды для топ игроков
+  top_players:
+    1:
+      rubies: 50
+    2:
+      rubies: 30
+    3:
+      rubies: 15
+
+  # Предметы, которые разбрасывает голем
+  # Формат: МАТЕРИАЛ:МИН_КОЛИЧЕСТВО-МАКС_КОЛИЧЕСТВО
+  items:
+    - "DIAMOND:10-20"
+    - "GOLD_INGOT:20-30"
+    - "IRON_INGOT:30-50"
+    - "EMERALD:5-15"
+    - "NETHERITE_INGOT:1-3"
+
+# Настройки расписания ивента
+schedule:
+  # Дни недели, в которые происходит ивент
+  days:
+    - "TUESDAY"
+    - "THURSDAY"
+    - "SATURDAY"
+  # Время начала ивента (по указанному часовому поясу)
+  time: "16:30"
+  # Часовой пояс
+  timezone: "Europe/Moscow"
+
+# Настройки дизайна
+design:
+  # Заголовок для Сердце Голема
+  title: "&cСердце Голема"
+
+  # Волна
+  wave: "&bВолна"
+
+  # Здоровье голема
+  health: "&aЗдоровье"
+
+  # Урон
+  damage: "&cУрон"
+
+  # Позиция
+  position: "&eПозиция"
+
+  # Ивент
+  event: "&d[Ивент]"
+
+  # Кнопки
+  button: "&6"
+
+  # Топ игроков
+  top_players: "&6Топ игроков"
+
+  # Награда
+  reward: "&eНаграда"
+
+# Настройки звуков
+sounds:
+  # Звук при запуске ивента
+  event_start: "ENTITY_ENDER_DRAGON_GROWL"
+
+  # Звук при начале волны
+  wave_start: "ENTITY_WITHER_SPAWN"
+
+  # Звук при смерти голема
+  golem_death: "ENTITY_WITHER_DEATH"
+
+  # Звук при успешном завершении ивента
+  event_success: "ENTITY_PLAYER_LEVELUP"
+
+  # Звук при выдаче наград
+  reward: "ENTITY_EXPERIENCE_ORB_PICKUP"
+
+  # Звук при спавне зомби
+  spawn_zombie: "ENTITY_ZOMBIE_AMBIENT"
+
+  # Звук при спавне скелета
+  spawn_skeleton: "ENTITY_SKELETON_AMBIENT"
+
+  # Звук при спавне паука
+  spawn_spider: "ENTITY_SPIDER_AMBIENT"
+
+  # Звук при спавне крипера
+  spawn_creeper: "ENTITY_CREEPER_PRIMED"
+
+  # Звук при спавне других мобов
+  spawn_generic: "ENTITY_HOSTILE_HURT"
+
+# Настройки сообщений
+messages:
+  event_start: "%event% &fИвент %title% &fначнется через 5 минут! Телепортация через &e{time} &fсекунд."
+  event_teleport: "%event% &fВы были телепортированы на ивент %title%&f!"
+  event_wave_start: "%event% &f%wave% &e{wave} &fначалась! Защищайте голема!"
+  event_wave_end: "%event% &f%wave% &e{wave} &fзавершена!"
+  event_end_success: "%event% &fИвент %title% &fуспешно завершен! Голем выжил!"
+  event_end_fail: "%event% &fИвент %title% &fпроигран! Голем погиб!"
+  event_reward: "%event% &fВы получили награду: &e{reward}"
+  event_top_players: "%event% &fТоп игроков по урону:"
+  event_top_player_format: "&e{position}. &f{player} - %damage% &f{damage} &fурона"
+  bossbar_title: "%title%"
+  bossbar_info: "%wave%: &e{wave}/3 | %health%: &a{health}% | %damage%: &c{damage} | %position%: &e{position}"
+  bossbar_top_player: "&e{position}. &f{player} - %damage% &f{damage} &fурона"
+  command_no_permission: "&c[Ошибка] &fУ вас нет прав для выполнения этой команды!"
+  command_event_started: "%event% &fИвент %title% &fзапущен!"
+  command_event_stopped: "%event% &fИвент %title% &fостановлен!"
+  command_spawn_added: "%event% &fТочка спавна добавлена!"
+  command_spawn_removed: "%event% &fБлижайшая точка спавна удалена!"
+  command_golem_set: "%event% &fПозиция голема установлена!"
