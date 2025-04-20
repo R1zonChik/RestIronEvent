@@ -15,6 +15,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -264,6 +265,12 @@ public final class RestIronEvent extends JavaPlugin implements Listener {
                                 previousGodModeStates.put(player.getUniqueId(), isGodModeEnabled(player));
                             }
                             setGodMode(player, false);
+                        }
+
+                        // Отключение полета на элитрах
+                        if (player.isGliding()) {
+                            player.setGliding(false);
+                            player.sendMessage(ChatColor.RED + "Полёт на элитрах запрещен в этом событии!");
                         }
                     }
                 }
@@ -532,6 +539,27 @@ public final class RestIronEvent extends JavaPlugin implements Listener {
 
         // Награда
         design.set("reward", "&eНаграда");
+    }
+
+    // Добавь этот метод в класс
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player)) return;
+
+        Player player = (Player) event.getWhoClicked();
+
+        // Проверяем, находится ли игрок в мире ивента
+        if (!player.getWorld().getName().equals(eventWorldName)) return;
+
+        // Проверяем, связано ли действие с элитрами
+        ItemStack current = event.getCurrentItem();
+        ItemStack cursor = event.getCursor();
+
+        if ((current != null && current.getType() == Material.ELYTRA) ||
+                (cursor != null && cursor.getType() == Material.ELYTRA)) {
+            event.setCancelled(true);
+            player.sendMessage(ChatColor.RED + "Элитры запрещены в этом событии!");
+        }
     }
 
     /**
@@ -1125,24 +1153,6 @@ public final class RestIronEvent extends JavaPlugin implements Listener {
         startBossBarUpdates();
     }
 
-    private void updateGolemBossBarTitle(int timeLeft) {
-        if (golem == null || !eventActive) return;
-
-        // Форматируем время в минуты:секунды
-        int minutes = timeLeft / 60;
-        int seconds = timeLeft % 60;
-        String timeString = String.format("%02d:%02d", minutes, seconds);
-
-        // Получаем заголовок с уже замененными плейсхолдерами
-        String baseTitle = getMessage("bossbar_title");
-
-        // Создаем итоговый заголовок с тире и временем
-        String title = baseTitle + " &8- &e" + timeString;
-
-        // Обновляем заголовок босс-бара
-        golemHealthBar.setTitle(ChatColor.translateAlternateColorCodes('&', title));
-    }
-
     /**
      * Запуск задачи проверки и корректировки целей мобов
      */
@@ -1352,6 +1362,7 @@ public final class RestIronEvent extends JavaPlugin implements Listener {
     /**
      * Обновление информации для игрока
      */
+    // Найди метод updatePlayerInfo и замени его на:
     private void updatePlayerInfo(Player player) {
         if ((!eventActive && !isEventEnded) || player == null || !player.isOnline()) {
             return;
@@ -1364,7 +1375,6 @@ public final class RestIronEvent extends JavaPlugin implements Listener {
 
         // Получение данных для отображения
         double playerDmg = playerDamage.getOrDefault(player.getUniqueId(), 0.0);
-        int position = getPlayerDamagePosition(player.getUniqueId());
         double golemHealthPercent = 0;
         if (golem != null && !golem.isDead()) {
             golemHealthPercent = Math.round((golem.getHealth() / golem.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue()) * 100);
@@ -1373,12 +1383,45 @@ public final class RestIronEvent extends JavaPlugin implements Listener {
         // Подготовка плейсхолдеров для сообщений
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("wave", String.valueOf(currentWave));
-        placeholders.put("health", String.valueOf(golemHealthPercent));
         placeholders.put("damage", String.format("%.1f", playerDmg));
-        placeholders.put("position", String.valueOf(position));
+
+        // Расчет оставшегося времени волны
+        List<Integer> waveDurations = config.getIntegerList(CONFIG_WAVE_DURATIONS);
+        int totalDuration = config.getInt(CONFIG_EVENT_DURATION, 600);
+        int waveEndTime = totalDuration;
+
+        for (int i = 0; i < currentWave; i++) {
+            if (i < waveDurations.size()) {
+                waveEndTime -= waveDurations.get(i);
+            }
+        }
+
+        // Форматирование времени в минуты:секунды
+        int timeLeft = waveEndTime;
+        int minutes = timeLeft / 60;
+        int seconds = timeLeft % 60;
+        String timeString = String.format("%02d:%02d", minutes, seconds);
+        placeholders.put("time", timeString);
 
         // Обновление информации на BossBar
-        infoBar.setTitle(getMessage("bossbar_info", placeholders));
+        infoBar.setTitle(ChatColor.translateAlternateColorCodes('&',
+                "&bВолна: &e" + currentWave + "/3 | &cУрон: &f" + String.format("%.1f", playerDmg) + " | &eПройдет: " + timeString));
+    }
+
+    // Также найди метод updateGolemBossBarTitle и замени его на:
+    private void updateGolemBossBarTitle(int timeLeft) {
+        if (golem == null || !eventActive) return;
+
+        // Форматируем время в минуты:секунды
+        int minutes = timeLeft / 60;
+        int seconds = timeLeft % 60;
+        String timeString = String.format("%02d:%02d", minutes, seconds);
+
+        // Создаем итоговый заголовок только с названием
+        String title = ChatColor.translateAlternateColorCodes('&', config.getString(CONFIG_DESIGN + ".title", "&cСердце Голема"));
+
+        // Обновляем заголовок босс-бара
+        golemHealthBar.setTitle(title);
     }
 
     /**
@@ -1970,7 +2013,7 @@ public final class RestIronEvent extends JavaPlugin implements Listener {
                             config.getString(CONFIG_DESIGN + ".event") + " &fИвент завершен"));
                 }
             }
-        }.runTaskLater(this, 200L); // 10 секунд = 200 тиков
+        }.runTaskLater(this, success ? 1200L : 200L); // 60 секунд (1200 тиков) при победе, 10 секунд (200 тиков) при поражении
     }
 
     /**
@@ -2177,9 +2220,24 @@ public final class RestIronEvent extends JavaPlugin implements Listener {
             return;
         }
 
+        // Если это голем - не убираем дроп, так как это часть награды
+        if (event.getEntity() == golem) {
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    endEvent(false);
+                }
+            }.runTaskLater(this, 1L);
+            return; // Выходим из метода, чтобы сохранить дроп с голема
+        }
+
         // Удаление моба из списка, если он был частью ивента
         if (spawnedMobs.contains(event.getEntity())) {
             spawnedMobs.remove(event.getEntity());
+
+            // Убираем дроп предметов с мобов
+            event.getDrops().clear();
+            event.setDroppedExp(0);
 
             // Проверка, все ли мобы убиты
             boolean allMobsDead = true;
@@ -2195,15 +2253,54 @@ public final class RestIronEvent extends JavaPlugin implements Listener {
                 needRespawn = true;
             }
         }
+        // Для всех других мобов в мире ивента (не из списка spawnedMobs, но в том же мире)
+        else if (event.getEntity().getWorld().getName().equals(eventWorldName) && !(event.getEntity() instanceof Player)) {
+            // Убираем дроп предметов
+            event.getDrops().clear();
+            event.setDroppedExp(0);
+        }
+    }
 
-        // Если умер голем, завершаем ивент
-        if (event.getEntity() == golem) {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    endEvent(false);
-                }
-            }.runTaskLater(this, 1L);
+    // Добавь новый метод для запрета PvP между игроками
+    @EventHandler
+    public void onPlayerDamagePlayer(EntityDamageByEntityEvent event) {
+        // Проверяем, происходит ли это в мире ивента
+        if (!event.getEntity().getWorld().getName().equals(eventWorldName)) return;
+
+        // Проверяем, является ли цель игроком
+        if (!(event.getEntity() instanceof Player)) return;
+
+        // Получаем атакующего (может быть игрок или снаряд от игрока)
+        Player attacker = null;
+        if (event.getDamager() instanceof Player) {
+            attacker = (Player) event.getDamager();
+        } else if (event.getDamager() instanceof Projectile) {
+            Projectile projectile = (Projectile) event.getDamager();
+            if (projectile.getShooter() instanceof Player) {
+                attacker = (Player) projectile.getShooter();
+            }
+        }
+
+        // Если атакующий - игрок, и цель - игрок, отменяем урон
+        if (attacker != null && event.getEntity() instanceof Player) {
+            event.setCancelled(true);
+            attacker.sendMessage(ChatColor.RED + "PvP запрещен в этом событии!");
+        }
+    }
+
+    @EventHandler
+    public void onPlayerToggleGlide(EntityToggleGlideEvent event) {
+        if (!(event.getEntity() instanceof Player)) return;
+
+        Player player = (Player) event.getEntity();
+
+        // Проверяем, находится ли игрок в мире ивента
+        if (!player.getWorld().getName().equals(eventWorldName)) return;
+
+        // Если игрок начинает полет на элитрах, отменяем это
+        if (event.isGliding()) {
+            event.setCancelled(true);
+            player.sendMessage(ChatColor.RED + "Полёт на элитрах запрещен в этом событии!");
         }
     }
 
